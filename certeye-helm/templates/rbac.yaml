@@ -1,0 +1,29 @@
+{{- if .Values.agent.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: certeye-agent
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: certeye-role
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: certeye-binding
+subjects:
+- kind: ServiceAccount
+  name: certeye-agent
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: certeye-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

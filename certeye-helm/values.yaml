@@ -1,0 +1,18 @@
+agent:
+  enabled: true
+  image:
+    repository: quay.io/certeye/certeye-agent
+    tag: "1.0.0"
+  replicaCount: 1
+  clusterName: "your-cluster-name"
+  apiUrl: "http://certeye-service/ingest"
+  checkInterval: 60
+  tolerations: []
+  # tolerations:
+  # - key: "key1"
+  #   operator: "Equal"
+  #   value: "value1"
+  #   effect: "NoSchedule"
+  # - key: "key2"
+  #   operator: "Exists"
+  #   effect: "NoExecute"

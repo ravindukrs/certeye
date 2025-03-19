@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: certeye-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: certeye-role
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: certeye-binding
+subjects:
+- kind: ServiceAccount
+  name: certeye-agent
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: certeye-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certeye-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: certeye-agent
+  template:
+    metadata:
+      labels:
+        app: certeye-agent
+    spec:
+      serviceAccountName: certeye-agent
+      containers:
+      - name: certeye-agent
+        image: quay.io/certeye/certeye-agent:1.0.0
+        env:
+        - name: CLUSTER_NAME
+          value: "your-cluster-name"
+        - name: API_URL
+          value: "http://certeye-service/ingest"
+        - name: CHECK_INTERVAL
+          value: "60"

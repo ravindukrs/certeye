@@ -1,0 +1,5 @@
+apiVersion: v2
+name: certeye
+version: 1.0.0
+description: A Helm chart for deploying Certeye components (Agent, Service, UI)
+appVersion: 1.0.0

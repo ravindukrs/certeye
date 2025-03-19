@@ -1,0 +1,32 @@
+{{- if .Values.agent.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certeye-agent
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.agent.replicaCount }}
+  selector:
+    matchLabels:
+      app: certeye-agent
+  template:
+    metadata:
+      labels:
+        app: certeye-agent
+    spec:
+      serviceAccountName: certeye-agent
+      {{- with .Values.agent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      containers:
+      - name: certeye-agent
+        image: {{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}
+        env:
+        - name: CLUSTER_NAME
+          value: "{{ .Values.agent.clusterName }}"
+        - name: API_URL
+          value: "{{ .Values.agent.apiUrl }}"
+        - name: CHECK_INTERVAL
+          value: "{{ .Values.agent.checkInterval }}"
+{{- end }}
