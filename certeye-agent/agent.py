@@ -1,8 +1,12 @@
 import os
 import json
-import time
+import base64
 import requests
+import ipaddress
 from kubernetes import client, config
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509.extensions import ExtensionNotFound
 
 # Load environment variables
 CLUSTER_NAME = os.getenv("CLUSTER_NAME", "unknown-cluster")
@@ -13,6 +17,11 @@ CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", 60))
 config.load_incluster_config()
 core_v1 = client.CoreV1Api()
 
+def serialize(obj):
+    """Ensure JSON serialization of non-serializable objects."""
+    if isinstance(obj, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+        return str(obj)
+    raise TypeError(f"Type {type(obj)} not serializable")
 
 def get_tls_secrets():
     """Fetch TLS secrets from all namespaces."""
@@ -25,31 +34,27 @@ def get_tls_secrets():
             name = secret.metadata.name
             creation_date = secret.metadata.creation_timestamp.isoformat()
 
-            # Extract certificate details
             cert_data = secret.data.get("tls.crt")
             if not cert_data:
                 continue
 
-            # Decode and parse the certificate
             try:
-                from cryptography import x509
-                from cryptography.hazmat.primitives import serialization
-                import base64
-
                 cert_bytes = base64.b64decode(cert_data)
                 cert = x509.load_pem_x509_certificate(cert_bytes)
 
                 cn = cert.subject.rfc4514_string()
-                sans = [name.value for name in cert.extensions.get_extension_for_class(
-                    x509.SubjectAlternativeName).value] if cert.extensions.get_extension_for_class(
-                    x509.SubjectAlternativeName) else []
+                try:
+                    san_extension = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
+                    sans = [name.value for name in san_extension.value]
+                except ExtensionNotFound:
+                    sans = []
+                
                 issuer = cert.issuer.rfc4514_string()
-                expire_date = cert.not_valid_after.isoformat()
+                expire_date = cert.not_valid_after_utc.isoformat()
             except Exception as e:
                 print(f"Error parsing certificate for {name} in {namespace}: {e}")
                 continue
 
-            # Append data
             secrets_data.append({
                 "cluster": CLUSTER_NAME,
                 "namespace": namespace,
@@ -62,7 +67,6 @@ def get_tls_secrets():
             })
 
     return secrets_data
-
 
 def push_data(data):
     """Send data to the central service."""
@@ -77,10 +81,7 @@ def main():
     secrets_data = get_tls_secrets()
     if secrets_data:
         print(f"Data that would be sent (count: {len(secrets_data)}):")
-        print(json.dumps(secrets_data, indent=2))
-        # Commented out the actual API call for testing
-        # push_data(secrets_data)        time.sleep(CHECK_INTERVAL)
-
+        print(json.dumps(secrets_data, indent=2, default=serialize))
 
 if __name__ == "__main__":
     main()
