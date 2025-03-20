@@ -2,11 +2,16 @@ agent:
   enabled: true
   image:
     repository: quay.io/certeye/certeye-agent
-    tag: "1.0.0"
+    tag: "1.0.3-beta"
   replicaCount: 1
-  clusterName: "your-cluster-name"
-  apiUrl: "http://certeye-service/ingest"
-  checkInterval: 60
+  config:
+    clusterName: "your-cluster-name"
+    apiUrl: "http://certeye-service/ingest"
+    checkInterval: 60
+    logLevel: "INFO"
+    timeout: 30
+    retryInterval: 5
+    maxRetries: 3
   tolerations: []
   # tolerations:
   # - key: "key1"
@@ -16,3 +21,26 @@ agent:
   # - key: "key2"
   #   operator: "Exists"
   #   effect: "NoExecute"
+
+server:
+  enabled: true
+  image:
+    repository: quay.io/certeye/certeye-server
+    tag: "1.0.0-beta"
+  replicaCount: 1
+  checkInterval: 60
+  tolerations: []
+  config:
+    service:
+      name: "certeye-service"
+      port: "80"
+      type: "ClusterIP"
+    ingress:
+      enabled: true
+      ingressClassName: "internal"
+      host: "example.com"
+      tls:
+        enabled: false
+        secretName: certeye-tls
+    checkInterval: 60
+    logLevel: "INFO"

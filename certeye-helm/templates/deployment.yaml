@@ -24,9 +24,47 @@ spec:
         image: {{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}
         env:
         - name: CLUSTER_NAME
-          value: "{{ .Values.agent.clusterName }}"
+          value: "{{ .Values.agent.config.clusterName }}"
         - name: API_URL
-          value: "{{ .Values.agent.apiUrl }}"
+          value: "{{ .Values.agent.config.apiUrl }}"
         - name: CHECK_INTERVAL
-          value: "{{ .Values.agent.checkInterval }}"
+          value: "{{ .Values.agent.config.checkInterval }}"
+        - name: LOG_LEVEL
+          value: "{{ .Values.agent.config.logLevel }}"
+        - name: TIMEOUT
+          value: {{ .Values.agent.config.timeout }}
+        - name: RETRY_INTERVAL
+          value: {{ .Values.agent.config.retryInterval }}
+        - name: MAX_RETRIES
+          value: {{ .Values.agent.config.maxRetries }}
+{{- end }}
+---
+{{- if .Values.server.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certeye-server
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      app: certeye-server
+  template:
+    metadata:
+      labels:
+        app: certeye-server
+    spec:
+      {{- with .Values.server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      containers:
+      - name: certeye-server
+        image: {{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}
+        ports:
+        - containerPort: 5000
+        env:
+        - name: LOG_LEVEL
+          value: "{{ .Values.server.config.logLevel }}"
 {{- end }}

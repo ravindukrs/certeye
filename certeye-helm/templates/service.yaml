@@ -1,0 +1,16 @@
+{{- if .Values.server.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.server.config.service.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.server.config.service.type }}
+  selector:
+    app: certeye-server
+  ports:
+    - protocol: TCP
+      port: {{ .Values.server.config.service.port }}
+      targetPort: 5000
+{{- end }}
