@@ -1,27 +1,37 @@
-FROM python:3.9-slim
+FROM python:3.9-slim AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     rustc \
-    cargo \
-    && rm -rf /var/lib/apt/lists/*
+    cargo && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --system appgroup && useradd --system --group appgroup appuser
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
-
-COPY requirements.txt ./
-
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY agent.py ./
+FROM python:3.9-slim
 
-RUN chown -R appuser:appgroup /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH"
 
-USER appuser
+COPY --from=builder /opt/venv /opt/venv
 
-CMD ["python", "agent.py"]
+RUN groupadd --system certeye && \
+    useradd --system --gid certeye --create-home --home-dir /app certeye
+
+WORKDIR /app
+COPY --chown=certeye:certeye agent.py .
+
+USER certeye
+
+ENTRYPOINT ["python", "agent.py"]
