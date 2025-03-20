@@ -8,7 +8,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
-logger = logging.getLogger('certeye-service')
+logger = logging.getLogger('certeye-server')
 
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
@@ -65,7 +65,7 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    logger.info(f"Starting certeye-service on port {PORT}")
+    logger.info(f"Starting certeye-server on port {PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=DEBUG)
 else:
     application = create_app()

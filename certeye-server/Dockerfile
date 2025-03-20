@@ -30,7 +30,7 @@ ENV PATH="/opt/venv/bin:$PATH" \
 RUN useradd -m certeye && \
     chown -R certeye:certeye /app
 
-COPY --chown=certeye:certeye service.py /app/
+COPY --chown=certeye:certeye server.py /app/
 
 USER certeye
 
@@ -39,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 
 EXPOSE $PORT
 
-ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--access-logfile", "-", "--error-logfile", "-", "service:application"]
+ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--access-logfile", "-", "--error-logfile", "-", "server:application"]
