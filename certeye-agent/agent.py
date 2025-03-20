@@ -119,6 +119,7 @@ def get_tls_secrets() -> List[Dict[str, Any]]:
 
 
 def push_data(data: List[Dict[str, Any]]) -> bool:
+    """Send data to the central service with retry logic."""
     headers = {
         "Content-Type": "application/json",
         "User-Agent": f"certeye-agent/{CLUSTER_NAME}"
@@ -127,10 +128,12 @@ def push_data(data: List[Dict[str, Any]]) -> bool:
     for attempt in range(MAX_RETRIES):
         try:
             logger.info(f"Sending {len(data)} records to {API_URL}")
+            # Use the serialize function as default JSON encoder
+            json_data = json.dumps(data, default=serialize)
             response = requests.post(
                 API_URL,
                 headers=headers,
-                json=data,
+                data=json_data,  # Send the pre-serialized JSON data
                 timeout=TIMEOUT
             )
 
