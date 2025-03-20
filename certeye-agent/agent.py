@@ -3,6 +3,7 @@ import json
 import base64
 import requests
 import ipaddress
+import time
 from kubernetes import client, config
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
@@ -32,8 +33,6 @@ def get_tls_secrets():
         if secret.type == "kubernetes.io/tls":
             namespace = secret.metadata.namespace
             name = secret.metadata.name
-            creation_date = secret.metadata.creation_timestamp.isoformat()
-
             cert_data = secret.data.get("tls.crt")
             if not cert_data:
                 continue
@@ -50,7 +49,16 @@ def get_tls_secrets():
                     sans = []
                 
                 issuer = cert.issuer.rfc4514_string()
-                expire_date = cert.not_valid_after_utc.isoformat()
+                issue_date = cert.not_valid_before_utc.isoformat() if hasattr(cert,
+                                                                              "not_valid_before_utc") else cert.not_valid_before.isoformat()
+                try:
+                    expire_date = cert.not_valid_after_utc.isoformat()
+                except AttributeError:
+                    try:
+                        expire_date = cert.not_valid_after.isoformat()
+                    except AttributeError:
+                        expire_date = str(getattr(cert, "not_valid_after",
+                                                  getattr(cert, "not_valid_after_utc", "Unknown")))
             except Exception as e:
                 print(f"Error parsing certificate for {name} in {namespace}: {e}")
                 continue
@@ -61,10 +69,13 @@ def get_tls_secrets():
                 "secret_name": name,
                 "cn": cn,
                 "sans": sans,
-                "creation_date": creation_date,
+                "issue_date": issue_date,
                 "expire_date": expire_date,
                 "issuer": issuer
             })
+
+            print(f"Added secret {name} from {namespace}: {secrets_data[-1]}")
+
 
     return secrets_data
 
@@ -78,10 +89,12 @@ def push_data(data):
         print(f"Failed to send data: {e}")
 
 def main():
-    secrets_data = get_tls_secrets()
-    if secrets_data:
-        print(f"Data that would be sent (count: {len(secrets_data)}):")
-        print(json.dumps(secrets_data, indent=2, default=serialize))
+    while True:
+        secrets_data = get_tls_secrets()
+        if secrets_data:
+            print(f"Data that would be sent (count: {len(secrets_data)}):")
+            print(json.dumps(secrets_data, indent=2, default=serialize))
+        time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
     main()

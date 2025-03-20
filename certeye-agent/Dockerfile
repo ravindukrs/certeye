@@ -3,6 +3,12 @@ FROM python:3.9-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    rustc \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --system appgroup && useradd --system --group appgroup appuser
 
 WORKDIR /app
