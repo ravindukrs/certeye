@@ -16,10 +16,10 @@ jobs:
     - name: Build the Docker image
       run: |
         cd certeye-agent
-        docker build . --file Dockerfile --tag certeye-agent:v1.0.v1.0.${{github.run_number}}
+        docker build . --file Dockerfile --tag quay.io/certeye/certeye-agent:v1.0.${{github.run_number}}
     - name: Save Image
       run: |
-        docker save certeye-agent:v1.0.${{github.run_number}} -o image.tar
+        docker save quay.io/certeye/certeye-agent:v1.0.${{github.run_number}} -o image.tar
     - name: Upload Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
@@ -39,7 +39,7 @@ jobs:
         docker load < image.tar
     - name: Docker Inspect
       run: |
-        docker image inspect certeye-agent:v1.0.${{github.run_number}}
+        docker image inspect quay.io/certeye/certeye-agent:v1.0.${{github.run_number}}
 
   docker-push:
     environment:
@@ -53,7 +53,7 @@ jobs:
     - name: Docker Load
       run: |
         docker load < image.tar
-    - name: Docker Load
+    - name: Docker Login
       env:
         QUAY_IO_ROBOT_PASSWORD: ${{ secrets.QUAY_IO_ROBOT_PASSWORD }}
         QUAY_IO_ROBOT_USER: ${{ secrets.QUAY_IO_ROBOT_USER }}
@@ -61,4 +61,4 @@ jobs:
         docker login -u='$QUAY_IO_ROBOT_USER' -p='$QUAY_IO_ROBOT_PASSWORD'
     - name: Docker Push
       run: |
-        docker image inspect certeye-agent:v1.0.${{github.run_number}}
+        docker push quay.io/certeye/certeye-agent:v1.0.${{github.run_number}}
