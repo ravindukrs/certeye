@@ -16,4 +16,4 @@ jobs:
     - name: Build the Docker image
       run: |
         cd certeye-agent
-        docker build . --file Dockerfile --tag certeye-agent:{{github.run_number}}
+        docker build . --file Dockerfile --tag certeye-agent:${{github.run_number}}
