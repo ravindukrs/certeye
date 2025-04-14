@@ -1,5 +1,4 @@
-name: Docker Image CI
-
+name: Build Agent
 on:
   push:
     branches: [ "main" ]
@@ -17,4 +16,4 @@ jobs:
     - name: Build the Docker image
       run: |
         cd certeye-agent
-        docker build . --file Dockerfile --tag certeye-agent:$(date +%s)
+        docker build . --file Dockerfile --tag certeye-agent:{{github.run_number}}
