@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  build:
+  docker-build:
 
     runs-on: ubuntu-latest
 
@@ -23,3 +23,16 @@ jobs:
     - name: Docker Push
       run: |
         docker images
+
+  docker-image-list:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: List Docker Images
+      run: |
+        ls
+        docker images
+    - name: Docker Inspect
+      run: |
+        docker image inspect certeye-agent:${{github.run_number}}
