@@ -17,22 +17,41 @@ jobs:
       run: |
         cd certeye-agent
         docker build . --file Dockerfile --tag certeye-agent:${{github.run_number}}
-    - name: List Docker Images & Inspect
+    - name: Save Image
       run: |
-        docker images
-    - name: Docker Push
-      run: |
-        docker images
+        docker save certeye-agent:${{github.run_number}} -o image.tar
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: docker-image
+        path: image.tar
 
-  docker-image-list:
+  docker-image-inspect:
 
     runs-on: ubuntu-latest
-
+    needs: docker-build
     steps:
-    - name: List Docker Images
+    - uses: actions/download-artifact@v4
+      with:
+        name: docker-image
+    - name: Docker Load
       run: |
-        ls
-        docker images
+        docker load < image.tar
     - name: Docker Inspect
+      run: |
+        docker image inspect certeye-agent:${{github.run_number}}
+
+  docker-push:
+
+    runs-on: ubuntu-latest
+    needs: [ docker-build, docker-image-inspect ]
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: docker-image
+    - name: Docker Load
+      run: |
+        docker load < image.tar
+    - name: Docker Push
       run: |
         docker image inspect certeye-agent:${{github.run_number}}
