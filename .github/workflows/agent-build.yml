@@ -58,7 +58,7 @@ jobs:
         QUAY_IO_ROBOT_PASSWORD: ${{ secrets.QUAY_IO_ROBOT_PASSWORD }}
         QUAY_IO_ROBOT_USER: ${{ secrets.QUAY_IO_ROBOT_USER }}
       run: |
-        docker login -u='$QUAY_IO_ROBOT_USER' -p='$QUAY_IO_ROBOT_PASSWORD'
+        docker login -u='$QUAY_IO_ROBOT_USER' -p='$QUAY_IO_ROBOT_PASSWORD' quay.io
     - name: Docker Push
       run: |
         docker push quay.io/certeye/certeye-agent:v1.0.${{github.run_number}}
