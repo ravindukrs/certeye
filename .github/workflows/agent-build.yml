@@ -17,3 +17,9 @@ jobs:
       run: |
         cd certeye-agent
         docker build . --file Dockerfile --tag certeye-agent:${{github.run_number}}
+    - name: List Docker Images & Inspect
+      run: |
+        docker images
+    - name: Docker Push
+      run: |
+        docker images
